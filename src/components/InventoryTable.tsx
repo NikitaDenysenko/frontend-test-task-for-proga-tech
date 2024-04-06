@@ -6,7 +6,7 @@ import Modal from "./Modal.tsx";
 const InventoryTable = () => {
     const [rowData, setRowData] = useState([]);
     const [showCreateItemModal, setShowCreateItemModal] = useState(false)
-    const [colDefs, setColDefs] = useState([
+    const [colDefs, _] = useState([
         { field: "item", flex: 1, filter: true },
         { field: "quantity", editable: true, flex: 1 },
         {
@@ -16,7 +16,7 @@ const InventoryTable = () => {
                     return null
                 }
                 return (
-                    <button onClick={() => handleDelete(params)}>Delete</button>
+                    <button className='bg-red-500 hover:bg-red-700 text-white font-bold  px-4 rounded' onClick={() => handleDelete(params)}>Delete</button>
                 )
             },
             flex: 1,
@@ -84,6 +84,7 @@ const InventoryTable = () => {
              onCellValueChanged={handleCellValueChanged}
              enableFilter={true}
              getRowClass={(params) => params.data.item === grandTotalRow.item ? grandTotalRowStyle : null}
+             rowHeight={45}
          />
          <div className="flex justify-center items-center">
              <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 ' onClick={openCreateItemModal}>Create new Item</button>
