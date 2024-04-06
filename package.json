@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "ag-grid-community": "^31.2.0",
     "ag-grid-react": "^31.2.0",
     "autoprefixer": "^10.4.19",
     "axios": "^1.6.8",

@@ -1,13 +1,20 @@
-import { AgGridReact } from 'ag-grid-react'; // AG Grid Component
+import { AgGridReact } from 'ag-grid-react';
 import {useEffect, useMemo, useState, FC} from "react";
 import axios from "axios";
 import Modal from "./Modal.tsx";
+import { ColDef, RowClassParams } from 'ag-grid-community';
+
+interface Inventory {
+    id: number;
+    item: string;
+    quantity: number;
+}
 
 const InventoryTable: FC = () => {
-    const [rowData, setRowData] = useState([]);
+    const [rowData, setRowData] = useState<Inventory[]>([]);
     const [showCreateItemModal, setShowCreateItemModal] = useState<boolean>(false)
 
-    const colDefs = [
+    const colDefs: ColDef[] = [
         { field: "item", flex: 1, filter: true },
         { field: "quantity", editable: (params) => params.data.item !== grandTotalRow.item, flex: 1, },
         {
@@ -57,7 +64,7 @@ const InventoryTable: FC = () => {
         await fetchData()
     }
 
-    const handleCreateItem = async (item, quantity) => {
+    const handleCreateItem = async (item: string, quantity: number) => {
         await axios.post('http://localhost:3000/inventory', {item, quantity})
         await fetchData()
         closeCreateItemModal()
@@ -83,6 +90,10 @@ const InventoryTable: FC = () => {
         await fetchData(filterText)
     }
 
+    const getRowClass = (params: RowClassParams) => {
+        return params.data.item === grandTotalRow.item ? grandTotalRowStyle : ''
+    }
+
     return (
      <div
          className="ag-theme-quartz"
@@ -94,7 +105,7 @@ const InventoryTable: FC = () => {
              editable={true}
              onCellValueChanged={handleCellValueChanged}
              enableFilter={true}
-             getRowClass={(params) => params.data.item === grandTotalRow.item ? grandTotalRowStyle : null}
+             getRowClass={getRowClass}
              rowHeight={45}
              onFilterChanged={onFilterChanged}
          />

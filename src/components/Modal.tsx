@@ -1,15 +1,21 @@
-import {useState} from "react";
+import {ChangeEvent, useState} from "react";
 
-const Modal = ({ isVisible, onClose, onSubmit }) => {
-    const [item, setItem] = useState()
-    const [quantity, setQuantity] = useState()
+interface ModalProps {
+    isVisible: boolean,
+    onClose: () => void,
+    onSubmit: (item: string, quantity: number) => Promise<void>
+}
 
-    const onItemChange = (event) => {
+const Modal = ({ isVisible, onClose, onSubmit }: ModalProps ) => {
+    const [item, setItem] = useState('')
+    const [quantity, setQuantity] = useState<number>(0)
+
+    const onItemChange = (event: ChangeEvent<HTMLInputElement>) => {
         setItem(event.target.value)
     }
 
-    const onQuantityChange = (event) => {
-        setQuantity(event.target.value)
+    const onQuantityChange = (event: ChangeEvent<HTMLInputElement>) => {
+        setQuantity(Number(event.target.value))
     }
 
     if(!isVisible) {
