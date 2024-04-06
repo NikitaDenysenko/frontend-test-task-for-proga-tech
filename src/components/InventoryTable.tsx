@@ -8,7 +8,7 @@ const InventoryTable = () => {
     const [showCreateItemModal, setShowCreateItemModal] = useState(false)
     const [colDefs, _] = useState([
         { field: "item", flex: 1, filter: true },
-        { field: "quantity", editable: true, flex: 1 },
+        { field: "quantity", editable: (params) => params.data.item !== grandTotalRow.item, flex: 1, },
         {
             headerName: '',
             cellRenderer: (params) => {
@@ -20,6 +20,7 @@ const InventoryTable = () => {
                 )
             },
             flex: 1,
+            editable: false,
         }
     ]);
 
