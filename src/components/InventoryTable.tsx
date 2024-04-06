@@ -1,18 +1,20 @@
 import { AgGridReact } from 'ag-grid-react'; // AG Grid Component
 import {useEffect, useRef, useState} from "react";
 import axios from "axios";
+import Modal from "./Modal.tsx";
 
 const InventoryTable = () => {
     const [rowData, setRowData] = useState([]);
-    const gridRef = useRef();
+    const [showCreateItemModal, setShowCreateItemModal] = useState(false)
     const [colDefs, setColDefs] = useState([
-        { field: "item" },
-        { field: "quantity" },
+        { field: "item", flex: 1 },
+        { field: "quantity", editable: true, flex: 1 },
         {
             headerName: '',
-            checkboxSelection: true,
-            width: 50,
-            field: 'checkboxBtn'
+            cellRenderer: (params) => (
+                <button onClick={() => handleDelete(params)}>Delete</button>
+            ),
+            flex: 1,
         }
     ]);
 
@@ -30,24 +32,48 @@ const InventoryTable = () => {
         }
     }
 
-    const handleDelete = async () => {
-        const deleteItemId = gridRef.current?.api.getSelectedRows()[0].id
+    const handleDelete = async (params) => {
+        const deleteItemId = params.data.id
         await axios.delete(`http://localhost:3000/inventory/${deleteItemId}`)
         await fetchData()
+    }
+
+    const handleCellValueChanged = async (params) => {
+        const editedData = { ...params.data, [params.colDef.field]: params.newValue };
+        const updatedRowData = rowData.map(row => row.id === params.data.id ? editedData : row);
+        setRowData(updatedRowData);
+        await axios.patch(`http://localhost:3000/inventory/${params.data.id}`, {quantity: params.newValue})
+        await fetchData()
+    }
+
+    const handleCreateItem = async (item, quantity) => {
+        await axios.post('http://localhost:3000/inventory', {item, quantity})
+        await fetchData()
+        closeCreateItemModal()
+    }
+
+    const openCreateItemModal = () => {
+        setShowCreateItemModal(true)
+    }
+
+    const closeCreateItemModal = () => {
+        setShowCreateItemModal(false)
     }
 
 
     return (
      <div
          className="ag-theme-quartz"
-         style={{ height: 500 }}
+         style={{ height: '500px', width: '100%'}}
      >
-         <button onClick={handleDelete}>Delete Item</button>
+         <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded' onClick={openCreateItemModal}>Create </button>
          <AgGridReact
              rowData={rowData}
              columnDefs={colDefs}
-             ref={gridRef}
+             editable={true}
+             onCellValueChanged={handleCellValueChanged}
          />
+         <Modal isVisible={showCreateItemModal} onClose={closeCreateItemModal} onSubmit={handleCreateItem}/>
      </div>
  )
 }
