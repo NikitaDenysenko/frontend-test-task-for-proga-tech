@@ -1,12 +1,13 @@
 import { AgGridReact } from 'ag-grid-react'; // AG Grid Component
-import {useEffect, useMemo, useState} from "react";
+import {useEffect, useMemo, useState, FC} from "react";
 import axios from "axios";
 import Modal from "./Modal.tsx";
 
-const InventoryTable = () => {
+const InventoryTable: FC = () => {
     const [rowData, setRowData] = useState([]);
-    const [showCreateItemModal, setShowCreateItemModal] = useState(false)
-    const [colDefs, _] = useState([
+    const [showCreateItemModal, setShowCreateItemModal] = useState<boolean>(false)
+
+    const colDefs = [
         { field: "item", flex: 1, filter: true },
         { field: "quantity", editable: (params) => params.data.item !== grandTotalRow.item, flex: 1, },
         {
@@ -22,15 +23,19 @@ const InventoryTable = () => {
             flex: 1,
             editable: false,
         }
-    ]);
+    ]
 
     useEffect(() => {
         fetchData()
     }, [])
 
-    const fetchData = async () => {
+    const fetchData = async (filterText?: string) => {
         try {
-            const response = await axios.get('http://localhost:3000/inventory')
+            let url = 'http://localhost:3000/inventory';
+            if (filterText) {
+                url += `/search?name=${filterText}`;
+            }
+            const response = await axios.get(url)
             const jsonData = await response.data
             setRowData(jsonData)
         } catch (error) {
@@ -73,10 +78,15 @@ const InventoryTable = () => {
     const grandTotalRow = {item: "Grand Total", quantity: totalItems}
     const grandTotalRowStyle = "bg-gray-200 font-bold";
 
+    const onFilterChanged = async (event) => {
+        const filterText = event.api.getFilterModel().item?.filter;
+        await fetchData(filterText)
+    }
+
     return (
      <div
          className="ag-theme-quartz"
-         style={{ height: '300px', width: '100%'}}
+         style={{ height: '320px', width: '100%'}}
      >
          <AgGridReact
              rowData={[...rowData, grandTotalRow]}
@@ -86,6 +96,7 @@ const InventoryTable = () => {
              enableFilter={true}
              getRowClass={(params) => params.data.item === grandTotalRow.item ? grandTotalRowStyle : null}
              rowHeight={45}
+             onFilterChanged={onFilterChanged}
          />
          <div className="flex justify-center items-center">
              <button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4 ' onClick={openCreateItemModal}>Create new Item</button>
