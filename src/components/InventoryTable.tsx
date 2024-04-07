@@ -36,9 +36,13 @@ const InventoryTable = () => {
         fetchInventoryData()
     }, [])
 
+    const getApiRoute = (): string => {
+        return import.meta.env.VITE_API_ROUTE;
+    }
+
     const fetchInventoryData = async (filterText?: string) => {
         try {
-            let url = 'http://localhost:3000/inventory';
+            let url = getApiRoute();
             if (filterText) {
                 url += `/search?name=${filterText}`;
             }
@@ -52,7 +56,7 @@ const InventoryTable = () => {
 
     const handleDeleteItem = async (params) => {
         const deleteItemId = params.data.id
-        await axios.delete(`http://localhost:3000/inventory/${deleteItemId}`)
+        await axios.delete(`${getApiRoute()}/${deleteItemId}`)
         await fetchInventoryData()
     }
 
@@ -60,12 +64,12 @@ const InventoryTable = () => {
         const editedData = { ...params.data, [params.colDef.field]: params.newValue };
         const updatedRowData = rowData.map(row => row.id === params.data.id ? editedData : row);
         setRowData(updatedRowData);
-        await axios.patch(`http://localhost:3000/inventory/${params.data.id}`, {quantity: params.newValue})
+        await axios.patch(`${getApiRoute()}/${params.data.id}`, {quantity: params.newValue})
         await fetchInventoryData()
     }
 
     const handleCreateItem = async (item: string, quantity: number) => {
-        await axios.post('http://localhost:3000/inventory', {item, quantity})
+        await axios.post(getApiRoute(), {item, quantity})
         await fetchInventoryData()
         closeCreateItemModal()
     }
