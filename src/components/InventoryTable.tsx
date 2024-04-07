@@ -1,5 +1,5 @@
 import { AgGridReact } from 'ag-grid-react';
-import {useEffect, useMemo, useState, FC} from "react";
+import {useEffect, useMemo, useState} from "react";
 import axios from "axios";
 import Modal from "./Modal.tsx";
 import { ColDef, RowClassParams } from 'ag-grid-community';
@@ -10,21 +10,21 @@ interface Inventory {
     quantity: number;
 }
 
-const InventoryTable: FC = () => {
+const InventoryTable = () => {
     const [rowData, setRowData] = useState<Inventory[]>([]);
     const [showCreateItemModal, setShowCreateItemModal] = useState<boolean>(false)
 
     const colDefs: ColDef[] = [
         { field: "item", flex: 1, filter: true },
-        { field: "quantity", editable: (params) => params.data.item !== grandTotalRow.item, flex: 1, },
+        { field: "quantity", editable: (params) => params.data.item !== getGrandTotalRow().item, flex: 1, },
         {
             headerName: '',
             cellRenderer: (params) => {
-                if(params.data.item === grandTotalRow.item) {
+                if(params.data.item === getGrandTotalRow().item) {
                     return null
                 }
                 return (
-                    <button className='bg-red-500 hover:bg-red-700 text-white font-bold  px-4 rounded' onClick={() => handleDelete(params)}>Delete</button>
+                    <button className='bg-red-500 hover:bg-red-700 text-white font-bold  px-4 rounded' onClick={() => handleDeleteItem(params)}>Delete</button>
                 )
             },
             flex: 1,
@@ -33,40 +33,40 @@ const InventoryTable: FC = () => {
     ]
 
     useEffect(() => {
-        fetchData()
+        fetchInventoryData()
     }, [])
 
-    const fetchData = async (filterText?: string) => {
+    const fetchInventoryData = async (filterText?: string) => {
         try {
             let url = 'http://localhost:3000/inventory';
             if (filterText) {
                 url += `/search?name=${filterText}`;
             }
             const response = await axios.get(url)
-            const jsonData = await response.data
+            const jsonData: Inventory[] = await response.data
             setRowData(jsonData)
         } catch (error) {
             console.error('Error in fetching data: ', error)
         }
     }
 
-    const handleDelete = async (params) => {
+    const handleDeleteItem = async (params) => {
         const deleteItemId = params.data.id
         await axios.delete(`http://localhost:3000/inventory/${deleteItemId}`)
-        await fetchData()
+        await fetchInventoryData()
     }
 
-    const handleCellValueChanged = async (params) => {
+    const handleQuantityValueChanged = async (params) => {
         const editedData = { ...params.data, [params.colDef.field]: params.newValue };
         const updatedRowData = rowData.map(row => row.id === params.data.id ? editedData : row);
         setRowData(updatedRowData);
         await axios.patch(`http://localhost:3000/inventory/${params.data.id}`, {quantity: params.newValue})
-        await fetchData()
+        await fetchInventoryData()
     }
 
     const handleCreateItem = async (item: string, quantity: number) => {
         await axios.post('http://localhost:3000/inventory', {item, quantity})
-        await fetchData()
+        await fetchInventoryData()
         closeCreateItemModal()
     }
 
@@ -82,16 +82,17 @@ const InventoryTable: FC = () => {
         return rowData.reduce((total, row) => total + row.quantity, 0);
     }, [rowData]);
 
-    const grandTotalRow = {item: "Grand Total", quantity: totalItems}
-    const grandTotalRowStyle = "bg-gray-200 font-bold";
+    const getGrandTotalRow = () => {
+        return {item: "Grand Total", quantity: totalItems}
+    }
 
     const onFilterChanged = async (event) => {
         const filterText = event.api.getFilterModel().item?.filter;
-        await fetchData(filterText)
+        await fetchInventoryData(filterText)
     }
 
     const getRowClass = (params: RowClassParams) => {
-        return params.data.item === grandTotalRow.item ? grandTotalRowStyle : ''
+        return params.data.item === getGrandTotalRow().item ? "bg-gray-200 font-bold" : ''
     }
 
     return (
@@ -100,10 +101,10 @@ const InventoryTable: FC = () => {
          style={{ height: '320px', width: '100%'}}
      >
          <AgGridReact
-             rowData={[...rowData, grandTotalRow]}
+             rowData={[...rowData, getGrandTotalRow()]}
              columnDefs={colDefs}
              editable={true}
-             onCellValueChanged={handleCellValueChanged}
+             onCellValueChanged={handleQuantityValueChanged}
              enableFilter={true}
              getRowClass={getRowClass}
              rowHeight={45}

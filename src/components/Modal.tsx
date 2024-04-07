@@ -1,4 +1,4 @@
-import {ChangeEvent, useState} from "react";
+import {ChangeEvent, FC, useState} from "react";
 
 interface ModalProps {
     isVisible: boolean,
@@ -10,11 +10,11 @@ const Modal = ({ isVisible, onClose, onSubmit }: ModalProps ) => {
     const [item, setItem] = useState('')
     const [quantity, setQuantity] = useState<number>(0)
 
-    const onItemChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleItemChange = (event: ChangeEvent<HTMLInputElement>) => {
         setItem(event.target.value)
     }
 
-    const onQuantityChange = (event: ChangeEvent<HTMLInputElement>) => {
+    const handleQuantityChange = (event: ChangeEvent<HTMLInputElement>) => {
         setQuantity(Number(event.target.value))
     }
 
@@ -42,7 +42,7 @@ const Modal = ({ isVisible, onClose, onSubmit }: ModalProps ) => {
                                    className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500
                                    focus:border-blue-500 block w-full p-2.5'
                                    placeholder='item'
-                                   onChange={onItemChange}
+                                   onChange={handleItemChange}
                                 />
                             </div>
                             <div className='mb-4'>
@@ -55,7 +55,7 @@ const Modal = ({ isVisible, onClose, onSubmit }: ModalProps ) => {
                                     className='bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500
                                    focus:border-blue-500 block w-full p-2.5'
                                     placeholder='quantity'
-                                    onChange={onQuantityChange}
+                                    onChange={handleQuantityChange}
                                 />
                             </div>
                         </form>
