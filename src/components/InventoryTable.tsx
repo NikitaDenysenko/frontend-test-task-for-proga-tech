@@ -1,4 +1,4 @@
-import { AgGridReact } from 'ag-grid-react';
+import { AgGridReact, ICellEditorComp } from 'ag-grid-react';
 import {useEffect, useMemo, useState} from "react";
 import axios from "axios";
 import Modal from "./Modal.tsx";
@@ -10,6 +10,10 @@ interface Inventory {
     quantity: number;
 }
 
+interface CellRendererProps {
+    data: Inventory
+}
+
 const InventoryTable = () => {
     const [rowData, setRowData] = useState<Inventory[]>([]);
     const [showCreateItemModal, setShowCreateItemModal] = useState<boolean>(false)
@@ -19,7 +23,7 @@ const InventoryTable = () => {
         { field: "quantity", editable: (params) => params.data.item !== getGrandTotalRow().item, flex: 1, },
         {
             headerName: '',
-            cellRenderer: (params) => {
+            cellRenderer: (params: CellRendererProps) => {
                 if(params.data.item === getGrandTotalRow().item) {
                     return null
                 }
@@ -54,13 +58,13 @@ const InventoryTable = () => {
         }
     }
 
-    const handleDeleteItem = async (params) => {
+    const handleDeleteItem = async (params: CellRendererProps) => {
         const deleteItemId = params.data.id
         await axios.delete(`${getApiRoute()}/${deleteItemId}`)
         await fetchInventoryData()
     }
 
-    const handleQuantityValueChanged = async (params) => {
+    const handleQuantityValueChanged = async (params: ICellEditorComp) => {
         const editedData = { ...params.data, [params.colDef.field]: params.newValue };
         const updatedRowData = rowData.map(row => row.id === params.data.id ? editedData : row);
         setRowData(updatedRowData);
@@ -90,7 +94,7 @@ const InventoryTable = () => {
         return {item: "Grand Total", quantity: totalItems}
     }
 
-    const onFilterChanged = async (event) => {
+    const onFilterChanged = async (event: ICellEditorComp) => {
         const filterText = event.api.getFilterModel().item?.filter;
         await fetchInventoryData(filterText)
     }
@@ -107,9 +111,7 @@ const InventoryTable = () => {
          <AgGridReact
              rowData={[...rowData, getGrandTotalRow()]}
              columnDefs={colDefs}
-             editable={true}
              onCellValueChanged={handleQuantityValueChanged}
-             enableFilter={true}
              getRowClass={getRowClass}
              rowHeight={45}
              onFilterChanged={onFilterChanged}
