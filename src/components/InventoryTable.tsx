@@ -1,8 +1,8 @@
-import { AgGridReact, ICellEditorComp } from 'ag-grid-react';
+import { AgGridReact } from 'ag-grid-react';
 import {useEffect, useMemo, useState} from "react";
 import axios from "axios";
 import Modal from "./Modal.tsx";
-import { ColDef, RowClassParams } from 'ag-grid-community';
+import { ColDef, RowClassParams, CellValueChangedEvent, FilterChangedEvent } from 'ag-grid-community';
 
 interface Inventory {
     id: number;
@@ -37,7 +37,7 @@ const InventoryTable = () => {
     ]
 
     useEffect(() => {
-        fetchInventoryData()
+        fetchInventoryData().catch(error => console.error('Something went wrong: ', error))
     }, [])
 
     const getApiRoute = (): string => {
@@ -64,11 +64,11 @@ const InventoryTable = () => {
         await fetchInventoryData()
     }
 
-    const handleQuantityValueChanged = async (params: ICellEditorComp) => {
-        const editedData = { ...params.data, [params.colDef.field]: params.newValue };
-        const updatedRowData = rowData.map(row => row.id === params.data.id ? editedData : row);
+    const handleQuantityValueChanged = async (event: CellValueChangedEvent) => {
+        const editedData = { ...event.data, [`${event.colDef.field}`]: event.newValue };
+        const updatedRowData = rowData.map(row => row.id === event.data.id ? editedData : row);
         setRowData(updatedRowData);
-        await axios.patch(`${getApiRoute()}/${params.data.id}`, {quantity: params.newValue})
+        await axios.patch(`${getApiRoute()}/${event.data.id}`, {quantity: event.newValue})
         await fetchInventoryData()
     }
 
@@ -94,7 +94,7 @@ const InventoryTable = () => {
         return {item: "Grand Total", quantity: totalItems}
     }
 
-    const onFilterChanged = async (event: ICellEditorComp) => {
+    const onFilterChanged = async (event: FilterChangedEvent) => {
         const filterText = event.api.getFilterModel().item?.filter;
         await fetchInventoryData(filterText)
     }
